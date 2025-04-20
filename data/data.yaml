@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 7
+names: ['Looking away', 'Looking forward', 'Phone use', 'Raising hand', 'Sleeping', 'Turning around', 'Writing-Reading']
+
+roboflow:
+  workspace: student-attention-monitoring-system
+  project: student-attention-monitoring
+  version: 6
+  license: Public Domain
+  url: https://universe.roboflow.com/student-attention-monitoring-system/student-attention-monitoring/dataset/6
