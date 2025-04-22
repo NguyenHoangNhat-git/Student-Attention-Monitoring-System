@@ -1,2 +1,0 @@
-hellooooo
-xin chao vn
