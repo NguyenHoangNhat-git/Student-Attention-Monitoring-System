@@ -1,95 +1,90 @@
-import os
-import cv2
 from ultralytics import YOLO
-import numpy as np
+import cv2
+import os
 
+# === CONFIGURATION ===
+model = YOLO("../runs/train/s_3k3_50/weights/best.pt")  # Your trained model
+img_dir = "../data/valid/images"  # Path to validation images
+label_dir = "../data/valid/labels"  # Path to ground-truth YOLO labels
+output_dir = "../wrong_predictions"  # Root output folder
+os.makedirs(output_dir, exist_ok=True)
 
-def compute_iou(box1, box2):
-    # Boxes in xyxy format
-    xA = max(box1[0], box2[0])
-    yA = max(box1[1], box2[1])
-    xB = min(box1[2], box2[2])
-    yB = min(box1[3], box2[3])
-
-    interArea = max(0, xB - xA) * max(0, yB - yA)
-    if interArea == 0:
-        return 0.0
-
-    box1Area = (box1[2] - box1[0]) * (box1[3] - box1[1])
-    box2Area = (box2[2] - box2[0]) * (box2[3] - box2[1])
-
-    iou = interArea / float(box1Area + box2Area - interArea)
-    return iou
-
-
-# Load your trained model
-model = YOLO("../runs/train/s_2.6k_relabeled2/weights/last.pt")
-
-# Paths
-image_folder = "../relabeled/valid/images"
-label_folder = "../relabeled/valid/labels"
-output_folder = "../misclassified/s_2.6k_relabeled2"
-
-os.makedirs(output_folder, exist_ok=True)
-
-# Predict
-results = model.predict(source=image_folder, save=False, conf=0.01)
-
-for result in results:
-    image_name = os.path.basename(result.path)
-    label_file = os.path.join(label_folder, os.path.splitext(image_name)[0] + ".txt")
-
-    if not os.path.exists(label_file):
+# === PROCESSING ===
+for img_file in os.listdir(img_dir):
+    if not img_file.endswith((".jpg", ".png", ".jpeg")):
         continue
 
-    # Load ground truth in xyxy format
-    gt_boxes = []
-    h, w = cv2.imread(result.path).shape[:2]
-    with open(label_file, "r") as f:
-        for line in f:
-            parts = line.strip().split()
-            cls = int(parts[0])
-            x, y, bw, bh = map(float, parts[1:5])
-            x1 = (x - bw / 2) * w
-            y1 = (y - bh / 2) * h
-            x2 = (x + bw / 2) * w
-            y2 = (y + bh / 2) * h
-            gt_boxes.append((cls, [x1, y1, x2, y2]))
+    img_path = os.path.join(img_dir, img_file)
+    label_path = os.path.join(label_dir, os.path.splitext(img_file)[0] + ".txt")
 
-    pred_classes = result.boxes.cls.cpu().numpy()
-    pred_coords = result.boxes.xyxy.cpu().numpy()  # xyxy format
+    if not os.path.exists(label_path):
+        continue
 
-    img = cv2.imread(result.path)
-    wrong_detected = False
+    # Predict with your model
+    results = model.predict(img_path, conf=0.001, iou=0.5)
+    pred_boxes = results[0].boxes
+    pred_classes = (
+        pred_boxes.cls.cpu().numpy().astype(int) if len(pred_boxes) > 0 else []
+    )
 
-    for pred_class, pred_bbox in zip(pred_classes, pred_coords):
-        best_iou = 0
-        closest_gt_class = None
+    # Read ground truth labels
+    with open(label_path, "r") as f:
+        gt_classes = [int(line.split()[0]) for line in f.readlines()]
 
-        for gt_class, gt_bbox in gt_boxes:
-            iou = compute_iou(pred_bbox, gt_bbox)
-            if iou > best_iou:
-                best_iou = iou
-                closest_gt_class = gt_class
+    # Load the image for drawing
+    img = cv2.imread(img_path)
+    h, w = img.shape[:2]
 
-        # If closest GT class is different or IoU too small
-        if closest_gt_class is None or int(pred_class) != int(closest_gt_class):
-            wrong_detected = True
-            x1, y1, x2, y2 = map(int, pred_bbox)
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 1)
-            label = f"{int(pred_class)}/{closest_gt_class if closest_gt_class is not None else 'None'}"
-            cv2.putText(
-                img,
-                label,
-                (x1, max(y1 - 5, 10)),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
-                (0, 0, 255),
-                1,
-            )
+    misclassified = False
 
-    if wrong_detected:
-        cv2.imwrite(os.path.join(output_folder, image_name), img)
+    # Check for any class mismatch
+    for gt_class in gt_classes:
+        if gt_class not in pred_classes:
+            misclassified = True
 
-print("Done! Misclassified images saved to:", output_folder)
+            # Draw predicted boxes (red) with pred_label / true_label
+            for box in pred_boxes:
+                xyxy = box.xyxy.cpu().numpy().astype(int)[0]
+                pred_label = int(box.cls.cpu().numpy())
+                cv2.rectangle(img, xyxy[:2], xyxy[2:], (0, 0, 255), 2)
+                cv2.putText(
+                    img,
+                    f"{pred_label}/{gt_class}",
+                    (xyxy[0], xyxy[1] - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (0, 0, 255),
+                    2,
+                )
+
+            # # Draw ground truth boxes (green)
+            # with open(label_path, "r") as f:
+            #     for line in f.readlines():
+            #         parts = line.strip().split()
+            #         cls_id = int(parts[0])
+            #         x_center, y_center, w_rel, h_rel = map(float, parts[1:5])
+            #         x1 = int((x_center - w_rel / 2) * w)
+            #         y1 = int((y_center - h_rel / 2) * h)
+            #         x2 = int((x_center + w_rel / 2) * w)
+            #         y2 = int((y_center + h_rel / 2) * h)
+            #         cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            #         cv2.putText(
+            #             img,
+            #             f"TRUTH:{cls_id}",
+            #             (x1, y1 - 5),
+            #             cv2.FONT_HERSHEY_SIMPLEX,
+            #             0.6,
+            #             (0, 255, 0),
+            #             2,
+            #         )
+
+            # Save image to correct folder
+            class_folder = os.path.join(output_dir, f"class_{gt_class}")
+            os.makedirs(class_folder, exist_ok=True)
+            save_path = os.path.join(class_folder, img_file)
+            cv2.imwrite(save_path, img)
+
+            break  # Save once per image, skip checking further ground truths
+
+print("✅ Misclassified images saved into folders by class!")
 print(model.names)

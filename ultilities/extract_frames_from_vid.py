@@ -27,6 +27,8 @@ def extract_frames_fast(video_path, output_folder, interval_sec):
         if not ret:
             break
 
+        frame = cv2.flip(frame, 0)
+
         frame_name = os.path.join(output_folder, f"frame_{saved:04d}.jpg")
         cv2.imwrite(frame_name, frame)
         print(f"Saved {frame_name}")
@@ -39,6 +41,6 @@ def extract_frames_fast(video_path, output_folder, interval_sec):
 if __name__ == "__main__":
     video_path = "../vid.MOV"
     output_folder = "../manual data"
-    interval_sec = 10
+    interval_sec = 8
 
     extract_frames_fast(video_path, output_folder, interval_sec)

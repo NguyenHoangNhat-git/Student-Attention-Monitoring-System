@@ -7,15 +7,15 @@ Ex: img 1: crop regions 1-3, img 2: crop regions 2-4, img 3:crop regions 1-3, ..
 """
 
 # Folder paths
-folder_path = "manual data"
+folder_path = "../manual data"
 output_root = os.path.join(folder_path, "cropped_diagonals")
 
 # Define 4 crop regions (adjust these to fit your images!)
 CROP_REGIONS = [  # (left, upper, right, lower)
-    (200, 900, 1000, 1500),  # Region 1
-    (700, 1000, 1600, 1600),  # Region 2
-    (1500, 1100, 2300, 1800),  # Region 3
-    (2300, 900, 3000, 1600),  # Region 4
+    (0, 400, 640, 1040),  # Region 1
+    (640, 400, 1280, 1040),  # Region 2
+    (1280, 400, 1920, 1040),  # Region 3
+    # (100, 0, 740, 640),  # Region 4
 ]
 
 # Make subfolders for each region
@@ -38,10 +38,11 @@ for index, filename in enumerate(sorted(image_files)):
             img_w, img_h = img.size
 
             # Select regions based on even/odd index
-            if index % 2 == 0:
-                selected_indices = [0, 2]  # Regions 1 & 3
-            else:
-                selected_indices = [1, 3]  # Regions 2 & 4
+            # if index % 2 == 0:
+            #     selected_indices = [0, 2]  # Regions 1 & 3
+            # else:
+            #     selected_indices = [1, 3]  # Regions 2 & 4
+            selected_indices = [0, 1, 2]
 
             for idx in selected_indices:
                 crop_box = CROP_REGIONS[idx]
