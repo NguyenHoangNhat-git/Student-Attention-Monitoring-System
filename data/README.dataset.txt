@@ -1,5 +1,5 @@
-# Student Attention Monitoring > 3k
-https://universe.roboflow.com/student-attention-monitoring-system/student-attention-monitoring
+# Student Attention Monitoring > 2025-04-26 10:09am
+https://universe.roboflow.com/student-attention-hieu-minh/student-attention-monitoring-r0cwi
 
 Provided by a Roboflow user
 License: Public Domain

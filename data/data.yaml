@@ -3,11 +3,11 @@ val: ../valid/images
 test: ../test/images
 
 nc: 7
-names: ['Looking away', 'Looking forward', 'Phone use', 'Raising hand', 'Sleeping', 'Turning around', 'Writing-Reading']
+names: ['Looking away', 'Looking forward', 'Phone use', 'Raising hand', 'Reading-writing', 'Sleepy', 'Turning around']
 
 roboflow:
-  workspace: student-attention-monitoring-system
-  project: student-attention-monitoring
-  version: 6
+  workspace: student-attention-hieu-minh
+  project: student-attention-monitoring-r0cwi
+  version: 1
   license: Public Domain
-  url: https://universe.roboflow.com/student-attention-monitoring-system/student-attention-monitoring/dataset/6
+  url: https://universe.roboflow.com/student-attention-hieu-minh/student-attention-monitoring-r0cwi/dataset/1

@@ -1,8 +1,8 @@
 
-Student Attention Monitoring - v6 3k
+Student Attention Monitoring - v1 2025-04-26 10:09am
 ==============================
 
-This dataset was exported via roboflow.com on April 17, 2025 at 1:23 PM GMT
+This dataset was exported via roboflow.com on April 26, 2025 at 3:10 AM GMT
 
 Roboflow is an end-to-end computer vision platform that helps you
 * collaborate with your team on computer vision projects
@@ -17,11 +17,14 @@ visit https://github.com/roboflow/notebooks
 
 To find over 100k other datasets and pre-trained models, visit https://universe.roboflow.com
 
-The dataset includes 3000 images.
+The dataset includes 1137 images.
 Objects are annotated in YOLOv11 format.
 
 The following pre-processing was applied to each image:
+* Auto-orientation of pixel data (with EXIF-orientation stripping)
 
-No image augmentation techniques were applied.
+The following augmentation was applied to create 3 versions of each source image:
+* 50% probability of horizontal flip
+* Random brigthness adjustment of between -15 and +15 percent
 
 
